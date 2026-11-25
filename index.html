@@ -16,18 +16,121 @@
           <p class="brand-subtitle">Öğrenci Ödev, Proje ve Sınav Takip Paneli</p>
         </div>
       </div>
-      <div class="header-meta">
+      <div class="header-actions">
         <span id="todayDateLabel" class="date-pill"></span>
+        <button type="button" id="loadSampleBtn" class="btn btn-secondary btn-sm">
+          Örnek Veri Yükle
+        </button>
       </div>
     </div>
   </header>
 
   <main class="container app-main">
-    <section class="card placeholder-card">
-      <h2>Çalışma Alanı Hazır</h2>
-      <p>StudyTrack temel proje iskeleti oluşturuldu. Planlanan özellikler iş takip panosundaki görevlere göre geliştirilecektir.</p>
-    </section>
+    <div class="workspace-grid">
+      <aside class="card form-card" aria-labelledby="formHeading">
+        <div class="section-header">
+          <h2 id="formHeading">Yeni Görev Ekle</h2>
+          <p class="section-hint">Ödev, sınav veya proje teslim tarihini kaydedin.</p>
+        </div>
+
+        <form id="taskForm" class="task-form" novalidate>
+          <div id="formErrors" class="form-errors" role="alert" hidden></div>
+
+          <div class="form-group">
+            <label for="taskTitle">Görev Başlığı <span class="required">*</span></label>
+            <input
+              type="text"
+              id="taskTitle"
+              name="title"
+              placeholder="Örn: DevOps Vize Projesi"
+              maxlength="120"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="taskCourse">Ders Adı <span class="required">*</span></label>
+            <input
+              type="text"
+              id="taskCourse"
+              name="course"
+              list="courseSuggestions"
+              placeholder="Örn: Yazılım Geliştirme ve DevOps"
+              maxlength="80"
+              required
+            />
+            <datalist id="courseSuggestions"></datalist>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="taskType">Tür</label>
+              <select id="taskType" name="type">
+                <option value="Ödev">Ödev</option>
+                <option value="Sınav">Sınav</option>
+                <option value="Proje">Proje</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="taskPriority">Öncelik</label>
+              <select id="taskPriority" name="priority">
+                <option value="medium" selected>Orta</option>
+                <option value="high">Yüksek</option>
+                <option value="low">Düşük</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="taskDueDate">Teslim Tarihi <span class="required">*</span></label>
+            <input type="date" id="taskDueDate" name="dueDate" required />
+          </div>
+
+          <div class="form-group">
+            <label for="taskNotes">Kısa Not (İsteğe Bağlı)</label>
+            <textarea
+              id="taskNotes"
+              name="notes"
+              rows="2"
+              maxlength="300"
+              placeholder="Örn: PDF olarak LMS'ye yüklenecek..."
+            ></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            + Görev Ekle
+          </button>
+        </form>
+      </aside>
+
+      <section class="card list-card" aria-labelledby="listHeading">
+        <div class="list-header">
+          <div class="list-title-group">
+            <h2 id="listHeading">Görev Listesi</h2>
+            <span id="taskCountBadge" class="count-pill">0 görev</span>
+          </div>
+          <div class="list-actions">
+            <button type="button" id="clearCompletedBtn" class="btn btn-ghost btn-sm" hidden>
+              Tamamlananları Temizle
+            </button>
+          </div>
+        </div>
+
+        <ul id="taskList" class="task-list" aria-live="polite"></ul>
+
+        <div id="emptyState" class="empty-state" hidden>
+          <p class="empty-title">Henüz kayıtlı ödev veya sınav yok.</p>
+          <p class="empty-desc">
+            Soldaki formu kullanarak ilk görevinizi ekleyebilir veya üstteki
+            <strong>Örnek Veri Yükle</strong> butonuyla uygulamayı hemen deneyebilirsiniz.
+          </p>
+        </div>
+      </section>
+    </div>
   </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <footer class="app-footer">
     <div class="container">
