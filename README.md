@@ -10,15 +10,15 @@
 
 ## İş Takip Panosu (GitHub Projects)
 
-- **Pano Bağlantısı:** *(GitHub Projects oluşturulduktan sonra buraya eklenecektir)*
+- **Pano Bağlantısı:** [StudyTrack İş Takip Panosu](https://github.com/users/demhatayaz15651/projects/1)
 - **Sütunlar:** `Yapılacak` · `Devam Ediyor` · `Tamamlandı`
-- **Planlanan Görevler (5+ Görev):**
-  1. **Ödev ve Sınav Ekleme, Listeleme, Tamamlama ve Silme** *(Tamamlandı)*
-  2. **Ders/Durum Filtreleme, Arama ve Yaklaşan Teslim Tarihi Uyarıları** *(Tamamlandı)*
-  3. Mevcut Ödev ve Sınav Kayıtlarını Düzenleme *(Yapılacak)*
-  4. Aylık Takvim Görünümü ile Teslim Tarihlerini Görselleştirme *(Yapılacak)*
-  5. Görev Listesini JSON/CSV Olarak Dışa ve İçe Aktarma *(Yapılacak)*
-  6. Çalışma Oturumu İçin Entegre Pomodoro Zamanlayıcısı *(Yapılacak)*
+- **Planlanan Görevler (6 Görev):**
+  1. [#1 — Ödev ve Sınav Ekleme, Listeleme, Tamamlama ve Silme](https://github.com/demhatayaz15651/studytrack/issues/1) *(Tamamlandı — [PR #7](https://github.com/demhatayaz15651/studytrack/pull/7))*
+  2. [#2 — Ders/Durum Filtreleme, Arama, Sıralama ve Yaklaşan Teslim Tarihi Uyarıları](https://github.com/demhatayaz15651/studytrack/issues/2) *(Tamamlandı — [PR #8](https://github.com/demhatayaz15651/studytrack/pull/8))*
+  3. [#3 — Mevcut Ödev ve Sınav Kayıtlarını Düzenleme](https://github.com/demhatayaz15651/studytrack/issues/3) *(Yapılacak)*
+  4. [#4 — Aylık Takvim Görünümü ile Teslim Tarihlerini Görselleştirme](https://github.com/demhatayaz15651/studytrack/issues/4) *(Yapılacak)*
+  5. [#5 — Görev Listesini JSON / CSV Olarak Dışa ve İçe Aktarma](https://github.com/demhatayaz15651/studytrack/issues/5) *(Yapılacak)*
+  6. [#6 — Çalışma Oturumu İçin Entegre Pomodoro Zamanlayıcısı](https://github.com/demhatayaz15651/studytrack/issues/6) *(Yapılacak)*
 
 ---
 
@@ -29,8 +29,8 @@ Bu proje saf **HTML5 / CSS3 / Vanilla JavaScript** ile geliştirilmiştir; haric
 ### Yöntem 1: Doğrudan Tarayıcıda Açma (Önerilen)
 1. Depoyu bilgisayarınıza klonlayın veya ZIP olarak indirin:
    ```bash
-   git clone <GITHUB_DEPO_URL>
-   cd <DEPO_KLASORU>
+   git clone https://github.com/demhatayaz15651/studytrack.git
+   cd studytrack
    ```
 2. Proje klasöründeki `index.html` dosyasına çift tıklayarak herhangi bir modern tarayıcıda (Chrome, Edge, Firefox) açın.
 
