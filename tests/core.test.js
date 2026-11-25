@@ -14,6 +14,8 @@ function createMemoryStorage() {
   };
 }
 
+// --- Görev 1: Temel Görev Yönetimi & Kalıcılık ---
+
 test("validateTaskInput rejects missing required fields with clear Turkish messages", () => {
   const res = Core.validateTaskInput({
     title: "   ",
@@ -104,4 +106,94 @@ test("saveTasks and loadTasks persist and restore tasks via storage", () => {
   const loaded = Core.loadTasks(storage);
   assert.equal(loaded.length, samples.length);
   assert.equal(loaded[0].title, samples[0].title);
+});
+
+// --- Görev 2: Filtreleme, Sıralama ve Yaklaşan Teslim Tarihi Uyarıları ---
+
+test("getDeadlineStatus classifies overdue, today, urgent, upcoming, and completed tasks", () => {
+  const ref = new Date(2026, 10, 25, 14, 0, 0); // 25 Kasım 2026
+
+  const overdue = Core.getDeadlineStatus({ dueDate: "2026-11-23", completed: false }, ref);
+  assert.equal(overdue.status, "overdue");
+  assert.equal(overdue.daysRemaining, -2);
+  assert.equal(overdue.label, "2 gün gecikti");
+
+  const today = Core.getDeadlineStatus({ dueDate: "2026-11-25", completed: false }, ref);
+  assert.equal(today.status, "urgent");
+  assert.equal(today.daysRemaining, 0);
+  assert.match(today.label, /Bugün/i);
+
+  const urgent = Core.getDeadlineStatus({ dueDate: "2026-11-28", completed: false }, ref);
+  assert.equal(urgent.status, "urgent");
+  assert.equal(urgent.daysRemaining, 3);
+
+  const upcoming = Core.getDeadlineStatus({ dueDate: "2026-12-02", completed: false }, ref);
+  assert.equal(upcoming.status, "upcoming");
+  assert.equal(upcoming.daysRemaining, 7);
+
+  const done = Core.getDeadlineStatus({ dueDate: "2026-11-20", completed: true }, ref);
+  assert.equal(done.status, "completed");
+});
+
+test("filterAndSortTasks filters by status, course, type, and Turkish case-insensitive search", () => {
+  const ref = new Date(2026, 10, 25, 12, 0, 0);
+  const samples = Core.getSampleTasks(ref);
+
+  const overdueOnly = Core.filterAndSortTasks(samples, { status: "overdue" }, ref);
+  assert.equal(overdueOnly.length, 1);
+  assert.match(overdueOnly[0].title, /SQL/);
+
+  const urgentOnly = Core.filterAndSortTasks(samples, { status: "urgent" }, ref);
+  assert.equal(urgentOnly.length, 2);
+
+  const byCourse = Core.filterAndSortTasks(
+    samples,
+    { course: "İşletim Sistemleri" },
+    ref
+  );
+  assert.equal(byCourse.length, 1);
+  assert.equal(byCourse[0].type, "Sınav");
+
+  const bySearch = Core.filterAndSortTasks(samples, { search: "İŞLETİM" }, ref);
+  assert.equal(bySearch.length, 1);
+  assert.equal(bySearch[0].course, "İşletim Sistemleri");
+
+  const byType = Core.filterAndSortTasks(samples, { type: "Proje" }, ref);
+  assert.equal(byType.length, 1);
+  assert.match(byType[0].title, /DevOps/);
+});
+
+test("filterAndSortTasks sorts active tasks by nearest due date and keeps completed tasks last", () => {
+  const ref = new Date(2026, 10, 25, 12, 0, 0);
+  const samples = Core.getSampleTasks(ref);
+
+  const sorted = Core.filterAndSortTasks(samples, { sortBy: "dueDateAsc" }, ref);
+  assert.equal(sorted[0].completed, false);
+  assert.equal(sorted[sorted.length - 1].completed, true);
+  // First pending task should be the overdue SQL task (-2 days)
+  assert.match(sorted[0].title, /SQL/);
+});
+
+test("computeSummaryStats accurately summarizes counts and completion rate", () => {
+  const ref = new Date(2026, 10, 25, 12, 0, 0);
+  const samples = Core.getSampleTasks(ref);
+
+  const stats = Core.computeSummaryStats(samples, ref);
+  assert.deepEqual(stats, {
+    total: 5,
+    pending: 4,
+    completed: 1,
+    overdue: 1,
+    urgent: 2,
+    completionRate: 20,
+  });
+});
+
+test("getUniqueCourses returns sorted distinct course list", () => {
+  const ref = new Date(2026, 10, 25, 12, 0, 0);
+  const samples = Core.getSampleTasks(ref);
+  const courses = Core.getUniqueCourses(samples);
+
+  assert.equal(courses.length, 5);
+  assert.equal(courses[0], "Algoritma Analizi");
 });
