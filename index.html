@@ -26,6 +26,54 @@
   </header>
 
   <main class="container app-main">
+    <!-- Özet İstatistik Kartları -->
+    <section class="stats-section" aria-label="Görev Özeti">
+      <div class="stats-grid">
+        <button type="button" class="stat-card stat-total is-active" data-stat-filter="all">
+          <span class="stat-label">Toplam Görev</span>
+          <strong id="statTotal" class="stat-value">0</strong>
+        </button>
+        <button type="button" class="stat-card stat-pending" data-stat-filter="pending">
+          <span class="stat-label">Bekleyen</span>
+          <strong id="statPending" class="stat-value">0</strong>
+        </button>
+        <button type="button" class="stat-card stat-urgent" data-stat-filter="urgent">
+          <span class="stat-label">Yaklaşan (≤3 Gün)</span>
+          <strong id="statUrgent" class="stat-value">0</strong>
+        </button>
+        <button type="button" class="stat-card stat-overdue" data-stat-filter="overdue">
+          <span class="stat-label">Geciken</span>
+          <strong id="statOverdue" class="stat-value">0</strong>
+        </button>
+        <button type="button" class="stat-card stat-completed" data-stat-filter="completed">
+          <span class="stat-label">Tamamlanan</span>
+          <strong id="statCompleted" class="stat-value">0</strong>
+        </button>
+      </div>
+
+      <div class="progress-wrapper" aria-label="Tamamlanma oranı">
+        <div class="progress-meta">
+          <span>Genel İlerleme</span>
+          <strong id="completionRateText">%0</strong>
+        </div>
+        <div class="progress-track">
+          <div id="completionProgressBar" class="progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Yaklaşan / Geciken Teslim Uyarı Şeridi -->
+    <section id="deadlineAlertBanner" class="alert-banner" role="status" aria-live="polite" hidden>
+      <div class="alert-content">
+        <span id="alertBadgeIcon" class="alert-icon" aria-hidden="true">!</span>
+        <div>
+          <strong id="alertTitle" class="alert-title"></strong>
+          <p id="alertMessage" class="alert-message"></p>
+        </div>
+      </div>
+      <div id="alertQuickActions" class="alert-actions"></div>
+    </section>
+
     <div class="workspace-grid">
       <aside class="card form-card" aria-labelledby="formHeading">
         <div class="section-header">
@@ -111,17 +159,73 @@
             <span id="taskCountBadge" class="count-pill">0 görev</span>
           </div>
           <div class="list-actions">
+            <button type="button" id="resetFiltersBtn" class="btn btn-ghost btn-sm" hidden>
+              Filtreleri Sıfırla
+            </button>
             <button type="button" id="clearCompletedBtn" class="btn btn-ghost btn-sm" hidden>
               Tamamlananları Temizle
             </button>
           </div>
         </div>
 
+        <!-- Filtreleme, Arama ve Sıralama Çubuğu -->
+        <div class="filter-bar" aria-label="Görev filtreleri">
+          <div class="filter-search-wrap">
+            <label for="filterSearch" class="sr-only">Görevlerde ara</label>
+            <input
+              type="search"
+              id="filterSearch"
+              placeholder="Başlık, ders veya notlarda ara..."
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="filter-selects">
+            <div class="filter-control">
+              <label for="filterStatus">Durum</label>
+              <select id="filterStatus">
+                <option value="all">Tümü</option>
+                <option value="pending">Bekleyen</option>
+                <option value="urgent">Yaklaşan (≤3 Gün)</option>
+                <option value="overdue">Geciken</option>
+                <option value="completed">Tamamlanan</option>
+              </select>
+            </div>
+
+            <div class="filter-control">
+              <label for="filterCourse">Ders</label>
+              <select id="filterCourse">
+                <option value="all">Tüm Dersler</option>
+              </select>
+            </div>
+
+            <div class="filter-control">
+              <label for="filterType">Tür</label>
+              <select id="filterType">
+                <option value="all">Tüm Türler</option>
+                <option value="Ödev">Ödev</option>
+                <option value="Sınav">Sınav</option>
+                <option value="Proje">Proje</option>
+              </select>
+            </div>
+
+            <div class="filter-control">
+              <label for="sortBy">Sıralama</label>
+              <select id="sortBy">
+                <option value="dueDateAsc">En Yakın Teslim</option>
+                <option value="dueDateDesc">En Uzak Teslim</option>
+                <option value="priorityDesc">Yüksek Öncelik</option>
+                <option value="newest">En Yeni Eklenen</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <ul id="taskList" class="task-list" aria-live="polite"></ul>
 
         <div id="emptyState" class="empty-state" hidden>
-          <p class="empty-title">Henüz kayıtlı ödev veya sınav yok.</p>
-          <p class="empty-desc">
+          <p id="emptyTitle" class="empty-title">Henüz kayıtlı ödev veya sınav yok.</p>
+          <p id="emptyDesc" class="empty-desc">
             Soldaki formu kullanarak ilk görevinizi ekleyebilir veya üstteki
             <strong>Örnek Veri Yükle</strong> butonuyla uygulamayı hemen deneyebilirsiniz.
           </p>

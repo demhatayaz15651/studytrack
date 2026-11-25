@@ -22,6 +22,9 @@
     return acc;
   }, {});
 
+  const URGENT_THRESHOLD_DAYS = 3;
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
   function toISODateString(date) {
     const d = date instanceof Date ? date : new Date(date);
     const year = d.getFullYear();
@@ -200,6 +203,185 @@
     }
   }
 
+  function getDaysRemaining(dueDateISO, referenceDate) {
+    if (!isValidISODate(dueDateISO)) {
+      return null;
+    }
+    const ref = referenceDate instanceof Date ? referenceDate : new Date();
+    const todayUTC = Date.UTC(ref.getFullYear(), ref.getMonth(), ref.getDate());
+    const [year, month, day] = dueDateISO.split("-").map(Number);
+    const dueUTC = Date.UTC(year, month - 1, day);
+    return Math.round((dueUTC - todayUTC) / MS_PER_DAY);
+  }
+
+  function getDeadlineStatus(task, referenceDate) {
+    if (!task) {
+      return { status: "upcoming", daysRemaining: null, label: "-" };
+    }
+    if (task.completed) {
+      return { status: "completed", daysRemaining: null, label: "Tamamlandı" };
+    }
+
+    const diff = getDaysRemaining(task.dueDate, referenceDate);
+    if (diff === null) {
+      return { status: "upcoming", daysRemaining: null, label: "Tarih belirsiz" };
+    }
+    if (diff < 0) {
+      return {
+        status: "overdue",
+        daysRemaining: diff,
+        label: Math.abs(diff) + " gün gecikti",
+      };
+    }
+    if (diff === 0) {
+      return {
+        status: "urgent",
+        daysRemaining: 0,
+        label: "Son gün (Bugün!)",
+      };
+    }
+    if (diff <= URGENT_THRESHOLD_DAYS) {
+      return {
+        status: "urgent",
+        daysRemaining: diff,
+        label: diff + " gün kaldı (Acil)",
+      };
+    }
+    return {
+      status: "upcoming",
+      daysRemaining: diff,
+      label: diff + " gün kaldı",
+    };
+  }
+
+  function getUniqueCourses(tasks) {
+    const current = Array.isArray(tasks) ? tasks : [];
+    return Array.from(
+      new Set(
+        current
+          .map(function (task) {
+            return String(task.course || "").trim();
+          })
+          .filter(Boolean)
+      )
+    ).sort(function (a, b) {
+      return a.localeCompare(b, "tr");
+    });
+  }
+
+  function normalizeTurkishText(value) {
+    return String(value || "").toLocaleLowerCase("tr-TR").trim();
+  }
+
+  function filterAndSortTasks(tasks, filters, referenceDate) {
+    const current = Array.isArray(tasks) ? tasks : [];
+    const opts = Object.assign(
+      {
+        search: "",
+        status: "all",
+        course: "all",
+        type: "all",
+        sortBy: "dueDateAsc",
+      },
+      filters || {}
+    );
+
+    const query = normalizeTurkishText(opts.search);
+
+    const filtered = current.filter(function (task) {
+      const deadline = getDeadlineStatus(task, referenceDate);
+
+      if (opts.status === "pending" && task.completed) {
+        return false;
+      }
+      if (opts.status === "completed" && !task.completed) {
+        return false;
+      }
+      if (opts.status === "overdue" && deadline.status !== "overdue") {
+        return false;
+      }
+      if (opts.status === "urgent" && deadline.status !== "urgent") {
+        return false;
+      }
+
+      if (opts.course !== "all" && task.course !== opts.course) {
+        return false;
+      }
+
+      if (opts.type !== "all" && task.type !== opts.type) {
+        return false;
+      }
+
+      if (query) {
+        const haystack = normalizeTurkishText(
+          [task.title, task.course, task.type, task.notes].join(" ")
+        );
+        if (!haystack.includes(query)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    return filtered.slice().sort(function (a, b) {
+      if (opts.sortBy === "dueDateDesc") {
+        return String(b.dueDate).localeCompare(String(a.dueDate));
+      }
+      if (opts.sortBy === "priorityDesc") {
+        const weightDiff =
+          getPriorityMeta(b.priority).weight - getPriorityMeta(a.priority).weight;
+        if (weightDiff !== 0) return weightDiff;
+        return String(a.dueDate).localeCompare(String(b.dueDate));
+      }
+      if (opts.sortBy === "newest") {
+        return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+      }
+
+      // Default: dueDateAsc (active tasks first, nearest deadline on top)
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      const dateDiff = String(a.dueDate).localeCompare(String(b.dueDate));
+      if (dateDiff !== 0) return dateDiff;
+      return getPriorityMeta(b.priority).weight - getPriorityMeta(a.priority).weight;
+    });
+  }
+
+  function computeSummaryStats(tasks, referenceDate) {
+    const current = Array.isArray(tasks) ? tasks : [];
+    let completed = 0;
+    let pending = 0;
+    let overdue = 0;
+    let urgent = 0;
+
+    current.forEach(function (task) {
+      if (task.completed) {
+        completed += 1;
+        return;
+      }
+      pending += 1;
+      const deadline = getDeadlineStatus(task, referenceDate);
+      if (deadline.status === "overdue") {
+        overdue += 1;
+      } else if (deadline.status === "urgent") {
+        urgent += 1;
+      }
+    });
+
+    const total = current.length;
+    const completionRate = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+    return {
+      total,
+      pending,
+      completed,
+      overdue,
+      urgent,
+      completionRate,
+    };
+  }
+
   function getSampleTasks(referenceDate) {
     const ref = referenceDate instanceof Date ? referenceDate : new Date();
     const samples = [
@@ -259,6 +441,7 @@
     STORAGE_KEY,
     TASK_TYPES,
     PRIORITIES,
+    URGENT_THRESHOLD_DAYS,
     toISODateString,
     addDaysToDate,
     isValidISODate,
@@ -272,6 +455,11 @@
     clearCompletedTasks,
     loadTasks,
     saveTasks,
+    getDaysRemaining,
+    getDeadlineStatus,
+    getUniqueCourses,
+    filterAndSortTasks,
+    computeSummaryStats,
     getSampleTasks,
   };
 });
